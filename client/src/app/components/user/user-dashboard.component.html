@@ -1,0 +1,419 @@
+<div class="fade-in" style="direction:rtl">
+
+  <!-- Skeleton -->
+  <ng-container *ngIf="loading">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div *ngFor="let i of [1,2,3]" class="skeleton h-32 rounded-2xl"></div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="skeleton h-72 rounded-2xl"></div>
+      <div class="skeleton h-72 rounded-2xl"></div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="!loading">
+
+    <!-- Quick Actions -->
+    <div class="flex gap-2 mb-6 flex-wrap">
+      <button class="btn-primary text-sm" (click)="showTransferModal = true">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M8 3L4 7l4 4"/><path d="M4 7h16"/><path d="M16 21l4-4-4-4"/><path d="M20 17H4"/>
+        </svg>
+        העברת כסף
+      </button>
+      <button class="btn-success text-sm" (click)="showIncomeModal = true">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        הוסף הכנסה
+      </button>
+      <button class="btn-danger text-sm" (click)="showExpenseModal = true">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        הוסף הוצאה
+      </button>
+      <button class="btn-ghost text-sm mr-auto" (click)="exportCSV()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        ייצוא CSV
+      </button>
+    </div>
+
+    <!-- Metric Cards -->
+<div class="flex flex-row flex-nowrap gap-4 mb-6 w-full" style="display: flex !important; flex-direction: row !important; flex-wrap: nowrap !important;">
+
+  <div class="metric-card flex-1" style="flex: 1; min-width: 0;">
+    <div class="flex items-start justify-between mb-4">
+      <div class="w-11 h-11 rounded-2xl flex items-center justify-center"
+           style="background:linear-gradient(135deg,#6366F1,#4F46E5)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+          <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
+        </svg>
+      </div>
+      <span class="badge-info">חשבון פעיל</span>
+    </div>
+    <p class="text-xs font-medium mb-1" style="color:#64748B">יתרה נוכחית</p>
+    <p class="text-3xl font-extrabold tracking-tight" style="color:#0F172A">₪{{ totalBalance | number:'1.0-0' }}</p>
+  </div>
+
+  <div class="metric-card flex-1" style="flex: 1; min-width: 0;">
+    <div class="flex items-start justify-between mb-4">
+      <div class="w-11 h-11 rounded-2xl flex items-center justify-center"
+           style="background:linear-gradient(135deg,#10B981,#059669)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+          <polyline points="17 6 23 6 23 12"/>
+        </svg>
+      </div>
+      <span class="badge-success">↑ הכנסות</span>
+    </div>
+    <p class="text-xs font-medium mb-1" style="color:#64748B">הכנסות החודש</p>
+    <p class="text-3xl font-extrabold tracking-tight" style="color:#059669">₪{{ monthlyIncome | number:'1.0-0' }}</p>
+    <p class="text-xs mt-1" style="color:#94A3B8">{{ incomes.length }} רשומות</p>
+  </div>
+
+  <div class="metric-card flex-1" style="flex: 1; min-width: 0;">
+    <div class="flex items-start justify-between mb-4">
+      <div class="w-11 h-11 rounded-2xl flex items-center justify-center"
+           style="background:linear-gradient(135deg,#EF4444,#DC2626)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+          <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/>
+          <polyline points="17 18 23 18 23 12"/>
+        </svg>
+      </div>
+      <span class="badge-danger">↓ הוצאות</span>
+    </div>
+    <p class="text-xs font-medium mb-1" style="color:#64748B">הוצאות החודש</p>
+    <p class="text-3xl font-extrabold tracking-tight" style="color:#DC2626">₪{{ monthlyExpenses | number:'1.0-0' }}</p>
+    <p class="text-xs mt-1" style="color:#94A3B8">{{ expenses.length }} רשומות</p>
+  </div>
+</div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+
+      <!-- Bar Chart
+      <div class="card">
+        <div class="flex items-center justify-between mb-5">
+          <div>
+            <h3 class="text-sm font-bold" style="color:#0F172A">הכנסות מול הוצאות</h3>
+            <p class="text-xs mt-0.5" style="color:#94A3B8">6 חודשים אחרונים</p>
+          </div>
+          <div class="flex gap-3">
+            <div class="flex items-center gap-1.5">
+              <div class="w-2.5 h-2.5 rounded-sm" style="background:#10B981"></div>
+              <span class="text-xs" style="color:#64748B">הכנסות</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <div class="w-2.5 h-2.5 rounded-sm" style="background:#EF4444"></div>
+              <span class="text-xs" style="color:#64748B">הוצאות</span>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-end justify-around gap-2 h-36 px-2">
+          <div *ngFor="let d of last6MonthsData" class="flex flex-col items-center gap-1 flex-1">
+            <div class="flex gap-1 items-end w-full justify-center">
+              <div class="rounded-t-lg w-5 transition-all duration-700"
+                   [style.height.px]="getBarHeight(d.income)"
+                   [style.background]="'#10B981'"
+                   [title]="'הכנסה: ₪' + d.income"></div>
+              <div class="rounded-t-lg w-5 transition-all duration-700"
+                   [style.height.px]="getBarHeight(d.expenses)"
+                   [style.background]="'#EF4444'"
+                   [title]="'הוצאה: ₪' + d.expenses"></div>
+            </div>
+            <span class="text-xs font-medium" style="color:#94A3B8">{{ d.month }}</span>
+          </div>
+        </div>
+      </div> -->
+
+      <!-- Donut Chart -->
+      <div class="card">
+        <div class="flex items-center justify-between mb-5">
+          <div>
+            <h3 class="text-sm font-bold" style="color:#0F172A">התפלגות הוצאות</h3>
+            <p class="text-xs mt-0.5" style="color:#94A3B8">לפי קטגוריה</p>
+          </div>
+        </div>
+        <div *ngIf="categoryBreakdown.length === 0" class="flex items-center justify-center h-28 text-sm" style="color:#94A3B8">
+          אין נתוני הוצאות
+        </div>
+        <div *ngIf="categoryBreakdown.length > 0" class="flex gap-5 items-center">
+          <div class="flex-shrink-0">
+            <svg viewBox="0 0 100 100" width="130" height="130">
+              <ng-container *ngFor="let cat of categoryBreakdown; let i = index">
+                <circle cx="50" cy="50" r="35"
+                  fill="none"
+                  [attr.stroke]="cat.color"
+                  stroke-width="18"
+                  [attr.stroke-dasharray]="(cat.percent * 2.199) + ' 220'"
+                  [attr.stroke-dashoffset]="getDonutOffset(i)"
+                  style="transition: stroke-dasharray 0.8s ease"/>
+              </ng-container>
+              <circle cx="50" cy="50" r="26" fill="white"/>
+              <text x="50" y="53" text-anchor="middle" font-size="9" font-weight="700" fill="#0F172A">הוצאות</text>
+            </svg>
+          </div>
+          <div class="flex flex-col gap-2 flex-1 min-w-0">
+            <div *ngFor="let cat of categoryBreakdown" class="flex items-center gap-2">
+              <div class="w-2.5 h-2.5 rounded-full flex-shrink-0" [style.background]="cat.color"></div>
+              <span class="text-xs truncate" style="color:#334155">{{ cat.name }}</span>
+              <span class="text-xs font-bold mr-auto" [style.color]="cat.color">{{ cat.percent }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Budget + Savings -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+
+      <!-- Budget Tracker -->
+      <div class="card">
+        <h3 class="text-sm font-bold mb-1" style="color:#0F172A">מעקב תקציב חודשי</h3>
+        <p class="text-xs mb-4" style="color:#94A3B8">הוצאות לעומת מגבלת התקציב</p>
+        <div *ngIf="budgetProgress.length === 0" class="text-sm text-center py-4" style="color:#94A3B8">אין הוצאות החודש</div>
+        <div class="flex flex-col gap-3">
+          <div *ngFor="let b of budgetProgress">
+            <div class="flex justify-between items-center mb-1.5">
+              <span class="text-xs font-medium" style="color:#334155">
+                {{ categoryIcons[b.category] || '📦' }} {{ b.category }}
+              </span>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold" [style.color]="b.color">{{ b.percent }}%</span>
+                <span class="text-xs" style="color:#94A3B8">₪{{ b.spent | number:'1.0-0' }} / ₪{{ b.limit | number:'1.0-0' }}</span>
+              </div>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="b.percent" [style.background]="b.color"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Savings Goals -->
+      <div class="card">
+        <h3 class="text-sm font-bold mb-1" style="color:#0F172A">יעדי חיסכון</h3>
+        <p class="text-xs mb-4" style="color:#94A3B8">התקדמות לעבר היעדים שלך</p>
+        <div class="flex flex-col gap-4">
+          <div *ngFor="let goal of savingsGoals" class="flex items-center gap-4">
+            <div class="text-2xl flex-shrink-0">{{ goal.icon }}</div>
+            <div class="flex-1">
+              <div class="flex justify-between items-center mb-1.5">
+                <span class="text-sm font-semibold" style="color:#0F172A">{{ goal.name }}</span>
+                <span class="text-xs font-bold" [style.color]="getSavingsColor(getSavingsPercent(goal))">
+                  {{ getSavingsPercent(goal) }}%
+                </span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill"
+                     [style.width.%]="getSavingsPercent(goal)"
+                     [style.background]="getSavingsColor(getSavingsPercent(goal))"></div>
+              </div>
+              <div class="flex justify-between mt-1.5">
+                <span class="text-xs" style="color:#94A3B8">₪{{ goal.saved | number:'1.0-0' }} נחסכו</span>
+                <span class="text-xs font-medium" style="color:#475569">יעד: ₪{{ goal.target | number:'1.0-0' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="card">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h3 class="text-sm font-bold" style="color:#0F172A">פעולות אחרונות</h3>
+          <p class="text-xs mt-0.5" style="color:#94A3B8">{{ recentTransactions.length }} פעולות אחרונות</p>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr style="border-bottom:2px solid #F1F5F9">
+              <th class="text-right pb-3 font-semibold text-xs" style="color:#94A3B8">סוג</th>
+              <th class="text-right pb-3 font-semibold text-xs" style="color:#94A3B8">תיאור</th>
+              <th class="text-right pb-3 font-semibold text-xs" style="color:#94A3B8">קטגוריה</th>
+              <th class="text-right pb-3 font-semibold text-xs" style="color:#94A3B8">תאריך</th>
+              <th class="text-left pb-3 font-semibold text-xs" style="color:#94A3B8">סכום</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let tx of recentTransactions" class="table-row">
+              <td class="py-3">
+                <span [class]="tx.type === 'income' ? 'badge-success' : 'badge-danger'">
+                  {{ tx.type === 'income' ? 'הכנסה' : 'הוצאה' }}
+                </span>
+              </td>
+              <td class="py-3 text-sm font-medium" style="color:#334155">{{ tx.description || '—' }}</td>
+              <td class="py-3 text-xs" style="color:#64748B">
+                {{ categoryIcons[tx.label] || '' }} {{ tx.label || '—' }}
+              </td>
+              <td class="py-3 text-xs" style="color:#94A3B8">{{ tx.date | date:'dd/MM/yyyy' }}</td>
+              <td class="py-3 text-left font-bold"
+                  [style.color]="tx.type === 'income' ? '#059669' : '#DC2626'">
+                {{ tx.type === 'income' ? '+' : '-' }}₪{{ tx.amount | number:'1.0-0' }}
+              </td>
+            </tr>
+            <tr *ngIf="recentTransactions.length === 0">
+              <td colspan="5" class="py-10 text-center text-sm" style="color:#94A3B8">אין עסקאות להצגה</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </ng-container>
+</div>
+
+<!-- TRANSFER MODAL -->
+<div class="modal-overlay" *ngIf="showTransferModal" (click)="$event.target === $event.currentTarget && closeTransferModal()">
+  <div class="modal-box" style="direction:rtl">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-bold" style="color:#0F172A">העברת כסף</h2>
+      <button class="p-1.5 rounded-lg hover:bg-slate-100 transition-all" style="color:#64748B" (click)="closeTransferModal()">✕</button>
+    </div>
+    <div class="flex items-center gap-2 mb-6" *ngIf="!transferSuccess">
+      <ng-container *ngFor="let s of [1,2,3]; let i = index">
+        <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white transition-all"
+             [style.background]="transferStep >= s ? '#6366F1' : '#E2E8F0'"
+             [style.color]="transferStep >= s ? 'white' : '#94A3B8'">{{ s }}</div>
+        <div *ngIf="i < 2" class="h-0.5 flex-1 rounded transition-all"
+             [style.background]="transferStep > s ? '#6366F1' : '#E2E8F0'"></div>
+      </ng-container>
+      <span class="text-xs mr-3" style="color:#64748B">
+        {{ transferStep === 1 ? 'בחר נמען' : transferStep === 2 ? 'הכנס סכום' : 'אישור' }}
+      </span>
+    </div>
+    <div *ngIf="transferStep === 1 && !transferSuccess" class="flex flex-col gap-4">
+      <div>
+        <label class="block text-sm font-semibold mb-2" style="color:#334155">מספר חשבון נמען</label>
+        <input type="number" class="input-field" placeholder="הכנס מספר חשבון" [(ngModel)]="transferData.toAccountId" (keyup.enter)="submitTransfer()"/>
+      </div>
+      <p *ngIf="transferError" class="text-sm" style="color:#EF4444">{{ transferError }}</p>
+    </div>
+    <div *ngIf="transferStep === 2 && !transferSuccess" class="flex flex-col gap-4">
+      <div class="p-3 rounded-xl flex items-center gap-3" style="background:#F8FAFC;border:1px solid #E2E8F0">
+        <span class="text-sm" style="color:#64748B">העברה לחשבון:</span>
+        <span class="text-sm font-bold" style="color:#0F172A">#{{ transferData.toAccountId }}</span>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold mb-2" style="color:#334155">סכום להעברה (₪)</label>
+        <input type="number" class="input-field text-xl font-bold" placeholder="0.00" [(ngModel)]="transferData.amount" (keyup.enter)="submitTransfer()"/>
+      </div>
+      <div class="flex justify-between text-xs px-1">
+        <span style="color:#64748B">יתרה נוכחית:</span>
+        <span class="font-bold" [style.color]="transferData.amount > totalBalance ? '#EF4444' : '#059669'">
+          ₪{{ totalBalance | number:'1.0-0' }}
+        </span>
+      </div>
+      <p *ngIf="transferError" class="text-sm" style="color:#EF4444">{{ transferError }}</p>
+    </div>
+    <div *ngIf="transferStep === 3 && !transferSuccess" class="flex flex-col gap-3">
+      <div class="rounded-xl p-4" style="background:#F8FAFC;border:1px solid #E2E8F0">
+        <div class="flex justify-between py-2.5 border-b" style="border-color:#E2E8F0">
+          <span class="text-sm" style="color:#64748B">מחשבון</span>
+          <span class="text-sm font-bold" style="color:#0F172A">#{{ authService.currentAccount()?.idAccount }}</span>
+        </div>
+        <div class="flex justify-between py-2.5 border-b" style="border-color:#E2E8F0">
+          <span class="text-sm" style="color:#64748B">לחשבון</span>
+          <span class="text-sm font-bold" style="color:#0F172A">#{{ transferData.toAccountId }}</span>
+        </div>
+        <div class="flex justify-between py-2.5">
+          <span class="text-sm" style="color:#64748B">סכום</span>
+          <span class="text-2xl font-extrabold" style="color:#6366F1">₪{{ transferData.amount | number:'1.2-2' }}</span>
+        </div>
+      </div>
+      <p *ngIf="transferError" class="text-sm text-center" style="color:#EF4444">{{ transferError }}</p>
+    </div>
+    <div *ngIf="transferSuccess" class="text-center py-6">
+      <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+           style="background:#ECFDF5">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <p class="font-bold text-lg" style="color:#0F172A">ההעברה בוצעה בהצלחה!</p>
+      <p class="text-sm mt-1" style="color:#64748B">₪{{ transferData.amount | number:'1.2-2' }} הועברו לחשבון #{{ transferData.toAccountId }}</p>
+      <button class="btn-primary mt-5 px-8" (click)="closeTransferModal()">סגור</button>
+    </div>
+    <div *ngIf="!transferSuccess" class="flex gap-3 mt-6">
+      <button *ngIf="transferStep > 1" class="btn-ghost flex-1" (click)="transferStep = transferStep - 1">חזור</button>
+      <button class="btn-primary flex-1" (click)="submitTransfer()"
+              [disabled]="transferSaving || (transferStep===1 && !transferData.toAccountId) || (transferStep===2 && !transferData.amount)">
+        <svg *ngIf="transferSaving" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="white" stroke-width="4"/>
+          <path class="opacity-75" fill="white" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+        </svg>
+        {{ transferSaving ? 'מעבד...' : transferStep === 3 ? 'אשר העברה' : 'המשך' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- INCOME MODAL -->
+<div class="modal-overlay" *ngIf="showIncomeModal" (click)="$event.target === $event.currentTarget && (showIncomeModal = false)">
+  <div class="modal-box" style="direction:rtl">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-bold" style="color:#0F172A">הוספת הכנסה</h2>
+      <button class="p-1.5 rounded-lg hover:bg-slate-100" style="color:#64748B" (click)="showIncomeModal = false">✕</button>
+    </div>
+    <div class="flex flex-col gap-4">
+      <div>
+        <label class="block text-sm font-semibold mb-2" style="color:#334155">סכום (₪)</label>
+        <input type="number" class="input-field" placeholder="0.00" [(ngModel)]="newIncome.amount"/>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold mb-2" style="color:#334155">מקור הכנסה</label>
+        <input type="text" class="input-field" placeholder="משכורת, פרילנס..." [(ngModel)]="newIncome.source"/>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold mb-2" style="color:#334155">תיאור</label>
+        <input type="text" class="input-field" [(ngModel)]="newIncome.description"/>
+      </div>
+      <div class="flex gap-3 mt-2">
+        <button class="btn-ghost flex-1" (click)="showIncomeModal = false">ביטול</button>
+        <button class="btn-success flex-1" (click)="submitIncome()">שמור הכנסה</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EXPENSE MODAL -->
+<div class="modal-overlay" *ngIf="showExpenseModal" (click)="$event.target === $event.currentTarget && (showExpenseModal = false)">
+  <div class="modal-box" style="direction:rtl">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-bold" style="color:#0F172A">הוספת הוצאה</h2>
+      <button class="p-1.5 rounded-lg hover:bg-slate-100" style="color:#64748B" (click)="showExpenseModal = false">✕</button>
+    </div>
+    <div class="flex flex-col gap-4">
+      <div>
+        <label class="block text-sm font-semibold mb-2" style="color:#334155">סכום (₪)</label>
+        <input type="number" class="input-field" placeholder="0.00" [(ngModel)]="newExpense.amount"/>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold mb-2" style="color:#334155">קטגוריה</label>
+        <select class="input-field" [(ngModel)]="newExpense.category">
+          <option value="" disabled>בחר קטגוריה</option>
+          <option *ngFor="let cat of expenseCategories" [value]="cat">{{ categoryIcons[cat] }} {{ cat }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-semibold mb-2" style="color:#334155">תיאור</label>
+        <input type="text" class="input-field" [(ngModel)]="newExpense.description"/>
+      </div>
+      <div class="flex items-center gap-2">
+        <input type="checkbox" id="futureExpD" [(ngModel)]="newExpense.isFutureExpense" class="w-4 h-4 accent-indigo-500"/>
+        <label for="futureExpD" class="text-sm" style="color:#334155">הוצאה עתידית</label>
+      </div>
+      <div class="flex gap-3 mt-2">
+        <button class="btn-ghost flex-1" (click)="showExpenseModal = false">ביטול</button>
+        <button class="btn-danger flex-1" (click)="submitExpense()">שמור הוצאה</button>
+      </div>
+    </div>
+  </div>
+</div>

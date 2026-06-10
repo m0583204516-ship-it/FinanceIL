@@ -1,0 +1,64 @@
+<div class="login-page">
+  <div class="login-container">
+
+    <!-- Logo -->
+    <div class="login-logo">
+      <h1>FinanceIL</h1>
+      <p>מערכת ניהול פיננסי מתקדמת</p>
+    </div>
+
+    <!-- Card -->
+    <div class="login-card">
+      <h2>כניסה למערכת</h2>
+
+      <!-- Error -->
+      <div *ngIf="error" class="login-error mb-4">
+        {{ error }}
+      </div>
+
+      <div class="login-form">
+        <div>
+          <label>אימייל</label>
+          <input
+            type="email"
+            class="input-field"
+            placeholder="הכנס אימייל"
+            [(ngModel)]="email"
+            (keyup.enter)="login()"
+          />
+        </div>
+
+        <div>
+          <label>סיסמה</label>
+          <input
+            type="password"
+            class="input-field"
+            placeholder="הכנס סיסמה"
+            [(ngModel)]="password"
+            (keyup.enter)="login()"
+          />
+        </div>
+
+        <button class="login-btn" (click)="login()" [disabled]="loading">
+          <span *ngIf="!loading">כניסה</span>
+          <span *ngIf="loading" class="flex items-center gap-2">
+            <svg class="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,.3)" stroke-width="4"/>
+              <path fill="white" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+            מתחבר...
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <div class="login-footer">
+      <span>אין לך חשבון? </span>
+      <a routerLink="/register">הרשמה</a>
+    </div>
+
+    <p class="login-copyright">
+      FinanceIL © {{ currentYear }} · כל הזכויות שמורות
+    </p>
+  </div>
+</div>

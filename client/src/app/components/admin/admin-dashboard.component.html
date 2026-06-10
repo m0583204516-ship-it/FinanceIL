@@ -1,0 +1,254 @@
+<div class="fade-in">
+
+  <!-- Skeleton -->
+  <ng-container *ngIf="loading">
+    <div class="admin-kpi-grid">
+      <div *ngFor="let i of [1,2,3,4]" class="skeleton" style="height:90px"></div>
+    </div>
+    <div class="skeleton mb-4" style="height:220px"></div>
+    <div class="skeleton" style="height:300px"></div>
+  </ng-container>
+
+  <ng-container *ngIf="!loading">
+
+    <!-- KPI Cards -->
+    <div class="admin-kpi-grid">
+      <div class="admin-card">
+        <p>סה"כ משתמשים</p>
+        <p class="big-num">{{ users.length }}</p>
+        <p class="text-xs" style="color:var(--gray-400)">פעילים</p>
+      </div>
+      <div class="admin-card">
+        <p>סה"כ חשבונות</p>
+        <p class="big-num">{{ accounts.length }}</p>
+        <p class="text-xs" style="color:var(--gray-400)">{{ adminCount }} מנהלים</p>
+      </div>
+      <div class="admin-card">
+        <p>נפח העברות</p>
+        <p class="big-num">₪{{ totalVolume | number:'1.0-0' }}</p>
+        <p class="text-xs" style="color:var(--gray-400)">{{ transferences.length }} עסקאות</p>
+      </div>
+      <div class="admin-card">
+        <p>נזילות מערכת</p>
+        <p class="big-num">₪{{ totalLiquidity | number:'1.0-0' }}</p>
+        <p class="text-xs" style="color:var(--gray-400)">סה"כ יתרות</p>
+      </div>
+    </div>
+
+    <!-- System Health Charts -->
+    <div class="charts-grid mb-6">
+      <div class="card">
+        <h3 class="text-sm font-bold mb-4" style="color:#0F172A">משתמשים פעילים יומיים (7 ימים)</h3>
+        <div class="flex items-end justify-around gap-2" style="height:80px">
+          <div *ngFor="let val of systemStats.dailyActiveUsers; let i = index"
+               class="flex flex-col items-center gap-1 flex-1">
+            <div class="w-full transition-all" style="background:var(--red);border-radius:4px 4px 0 0;min-height:4px"
+                 [style.height.px]="getBarH(val, systemStats.dailyActiveUsers)"></div>
+            <span class="text-xs" style="color:var(--gray-400)">{{ systemStats.days[i] }}</span>
+          </div>
+        </div>
+        <div class="flex justify-between mt-3 text-xs" style="color:var(--gray-400)">
+          <span>שיא: {{ getMaxStat(systemStats.dailyActiveUsers) }}</span>
+          <span>ממוצע: {{ (systemStats.dailyActiveUsers.reduce((a,b)=>a+b,0) / 7) | number:'1.0-0' }}</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3 class="text-sm font-bold mb-4" style="color:#0F172A">קריאות API יומיות (7 ימים)</h3>
+        <div class="flex items-end justify-around gap-2" style="height:80px">
+          <div *ngFor="let val of systemStats.apiCalls; let i = index"
+               class="flex flex-col items-center gap-1 flex-1">
+            <div class="w-full transition-all" style="background:#4F46E5;border-radius:4px 4px 0 0;min-height:4px"
+                 [style.height.px]="getBarH(val, systemStats.apiCalls)"></div>
+            <span class="text-xs" style="color:var(--gray-400)">{{ systemStats.days[i] }}</span>
+          </div>
+        </div>
+        <div class="flex justify-between mt-3 text-xs" style="color:var(--gray-400)">
+          <span>שיא: {{ getMaxStat(systemStats.apiCalls) }}</span>
+          <span>ממוצע: {{ (systemStats.apiCalls.reduce((a,b)=>a+b,0) / 7) | number:'1.0-0' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="card mb-6">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-sm font-bold" style="color:#0F172A">ניהול משתמשים</h3>
+        <div class="table-search-bar">
+          <input type="text" class="input-field" placeholder="🔍 חיפוש משתמש..." style="max-width:200px"
+                 [(ngModel)]="userSearch"/>
+          <button class="btn-primary text-sm" (click)="showAddUserModal = true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            הוסף משתמש
+          </button>
+          <button class="btn-ghost text-sm" (click)="exportUsersCSV()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            ייצוא CSV
+          </button>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr style="border-bottom:2px solid var(--gray-200)">
+              <th class="text-right pb-3 font-semibold text-xs" style="color:var(--gray-400)">ת.ז</th>
+              <th class="text-right pb-3 font-semibold text-xs" style="color:var(--gray-400)">שם מלא</th>
+              <th class="text-right pb-3 font-semibold text-xs" style="color:var(--gray-400)">טלפון</th>
+              <th class="text-right pb-3 font-semibold text-xs" style="color:var(--gray-400)">חשבונות</th>
+              <th class="text-right pb-3 font-semibold text-xs" style="color:var(--gray-400)">יתרה כוללת</th>
+              <th class="text-right pb-3 font-semibold text-xs" style="color:var(--gray-400)">פעולות</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of filteredUsers" class="table-row">
+              <td class="py-3">{{ user.idUser }}</td>
+              <td class="py-3">
+                <div class="flex items-center gap-2">
+                  <div class="navbar__avatar" style="width:28px;height:28px;font-size:.75rem">
+                    {{ user.firstName.charAt(0) }}
+                  </div>
+                  <span class="font-semibold">{{ user.firstName }} {{ user.lastName }}</span>
+                </div>
+              </td>
+              <td class="py-3">{{ user.phone || '—' }}</td>
+              <td class="py-3">
+                <span class="badge-info">{{ getUserAccounts(user.idUser).length }} חשבונות</span>
+              </td>
+              <td class="py-3 font-bold" style="color:var(--green)">
+                ₪{{ getUserBalance(user.idUser) | number:'1.0-0' }}
+              </td>
+              <td class="py-3">
+                <div class="action-btns">
+                  <button class="btn-edit">עריכה</button>
+                  <button class="btn-delete" (click)="openDeleteConfirm(user)">מחיקה</button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="filteredUsers.length === 0">
+              <td colspan="6" class="py-10 text-center text-sm" style="color:var(--gray-400)">לא נמצאו משתמשים</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Transfers Monitor -->
+    <div class="card">
+      <div class="flex items-center justify-between mb-5">
+        <h3 class="text-sm font-bold" style="color:#0F172A">ניטור העברות</h3>
+        <div class="flex gap-2">
+          <button class="btn-ghost text-sm"
+                  (click)="transferFilter = 'all'">הכל</button>
+          <button class="btn-ghost text-sm"
+                  (click)="transferFilter = 'high'">
+            🚨 סכום גבוה (₪10,000+)
+          </button>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr style="border-bottom:2px solid var(--gray-200)">
+              <th class="text-right pb-3 font-semibold text-xs" style="color:var(--gray-400)">#</th>
+              <th class="text-right pb-3 font-semibold text-xs" style="color:var(--gray-400)">מחשבון</th>
+              <th class="text-right pb-3 font-semibold text-xs" style="color:var(--gray-400)">לחשבון</th>
+              <th class="text-right pb-3 font-semibold text-xs" style="color:var(--gray-400)">תאריך</th>
+              <th class="text-right pb-3 font-semibold text-xs" style="color:var(--gray-400)">סכום</th>
+              <th class="text-right pb-3 font-semibold text-xs" style="color:var(--gray-400)">דגל</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let t of filteredTransferences" class="table-row">
+              <td class="py-3 text-xs" style="color:var(--gray-400)">#{{ t.idTransference }}</td>
+              <td class="py-3">
+                {{ t.fromAccount?.user?.firstName }} {{ t.fromAccount?.user?.lastName }}
+                <span class="text-xs" style="color:var(--gray-400)"> (#{{ t.fromAccount?.idAccount }})</span>
+              </td>
+              <td class="py-3">
+                {{ t.toAccount?.user?.firstName }} {{ t.toAccount?.user?.lastName }}
+                <span class="text-xs" style="color:var(--gray-400)"> (#{{ t.toAccount?.idAccount }})</span>
+              </td>
+              <td class="py-3 text-xs" style="color:var(--gray-400)">{{ t.date | date:'dd/MM/yy HH:mm' }}</td>
+              <td class="py-3 font-bold" style="color:#0F172A">
+                ₪{{ t.amount | number:'1.0-0' }}
+              </td>
+              <td class="py-3">
+                <span *ngIf="t.amount >= 10000" class="tag-high">🚨 גבוה</span>
+                <span *ngIf="t.amount < 10000" class="tag-ok">✓ תקין</span>
+              </td>
+            </tr>
+            <tr *ngIf="filteredTransferences.length === 0">
+              <td colspan="6" class="py-10 text-center text-sm" style="color:var(--gray-400)">אין העברות</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </ng-container>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal-overlay" *ngIf="showAddUserModal" (click)="$event.target === $event.currentTarget && (showAddUserModal = false)">
+  <div class="modal-box" style="direction:rtl">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="text-lg font-bold" style="color:#0F172A">הוספת משתמש חדש</h2>
+      <button class="btn-ghost" style="padding:4px 8px" (click)="showAddUserModal = false">✕</button>
+    </div>
+    <div class="login-form">
+      <div>
+        <label>תעודת זהות *</label>
+        <input type="text" class="input-field" placeholder="9 ספרות" [(ngModel)]="newUser.idUser"/>
+      </div>
+      <div class="flex gap-3">
+        <div class="flex-1">
+          <label>שם פרטי *</label>
+          <input type="text" class="input-field" placeholder="שם פרטי" [(ngModel)]="newUser.firstName"/>
+        </div>
+        <div class="flex-1">
+          <label>שם משפחה *</label>
+          <input type="text" class="input-field" placeholder="שם משפחה" [(ngModel)]="newUser.lastName"/>
+        </div>
+      </div>
+      <div>
+        <label>אימייל *</label>
+        <input type="email" class="input-field" placeholder="example@mail.com" [(ngModel)]="newUser.email"/>
+      </div>
+      <div>
+        <label>טלפון</label>
+        <input type="tel" class="input-field" placeholder="050-0000000" [(ngModel)]="newUser.phone"/>
+      </div>
+      <div class="flex gap-3 mt-1">
+        <button class="btn-ghost flex-1" (click)="showAddUserModal = false">ביטול</button>
+        <button class="btn-primary flex-1" (click)="saveUser()">שמור משתמש</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="$event.target === $event.currentTarget && (showDeleteConfirm = false)">
+  <div class="modal-box text-center" style="direction:rtl;max-width:360px">
+    <div class="flex items-center justify-center mb-4" style="width:56px;height:56px;border-radius:50%;background:var(--danger-bg);margin:0 auto 16px">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2">
+        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+        <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+      </svg>
+    </div>
+    <h3 class="font-bold text-lg mb-2" style="color:#0F172A">מחיקת משתמש</h3>
+    <p class="text-sm mb-5" style="color:var(--gray-600)">
+      האם למחוק את <strong>{{ selectedUser?.firstName }} {{ selectedUser?.lastName }}</strong>?
+      <br>פעולה זו אינה הפיכה.
+    </p>
+    <div class="flex gap-3">
+      <button class="btn-ghost flex-1" (click)="showDeleteConfirm = false">ביטול</button>
+      <button class="btn-danger flex-1" (click)="confirmDelete()">אשר מחיקה</button>
+    </div>
+  </div>
+</div>

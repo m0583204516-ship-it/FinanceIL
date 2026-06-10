@@ -1,0 +1,50 @@
+<div class="login-page">
+  <div class="login-container">
+
+    <div class="login-logo">
+      <h1>הרשמה חדשה</h1>
+      <p>צור חשבון חדש במערכת</p>
+    </div>
+
+    <div class="login-card">
+      <div *ngIf="error" class="login-error mb-4">
+        {{ error }}
+      </div>
+
+      <div class="login-form">
+        <div>
+          <label>מספר חשבון</label>
+          <input type="text" class="input-field" [(ngModel)]="idAccount" />
+        </div>
+        <div class="flex gap-3">
+          <div class="flex-1">
+            <label>שם פרטי</label>
+            <input type="text" class="input-field" [(ngModel)]="firstName" />
+          </div>
+          <div class="flex-1">
+            <label>שם משפחה</label>
+            <input type="text" class="input-field" [(ngModel)]="lastName" />
+          </div>
+        </div>
+        <div>
+          <label>טלפון (אופציונלי)</label>
+          <input type="text" class="input-field" [(ngModel)]="phone" />
+        </div>
+        <div>
+          <label>סיסמה</label>
+          <input type="password" class="input-field" [(ngModel)]="password" />
+        </div>
+
+        <div class="flex gap-3 mt-1">
+          <button class="btn-ghost flex-1" (click)="cancel()">ביטול</button>
+          <button class="login-btn flex-1" (click)="register()" [disabled]="loading">
+            <span *ngIf="!loading">הרשמה</span>
+            <span *ngIf="loading">...שולח</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <p class="login-copyright">FinanceIL © כל הזכויות שמורות</p>
+  </div>
+</div>
